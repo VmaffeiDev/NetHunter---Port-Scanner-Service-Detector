@@ -6,7 +6,7 @@ Ferramenta em Python para **varredura de portas TCP** e **detecção simples de 
 - varredura de portas TCP com timeout configurável;
 - classificação de status por porta (`OPEN` / `CLOSED`);
 - detecção básica de serviço por portas comuns (HTTP, HTTPS, SSH, etc.);
-- CLI para uso rápido em terminal;
+- CLI para uso rápido em terminal, com validação de intervalo/porta e timeout;
 - testes automatizados para scanner, detector e parser de portas.
 
 > ⚠️ Use apenas em ambientes autorizados (infra própria/lab ou com permissão explícita).

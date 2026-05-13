@@ -9,7 +9,18 @@ from src.detector import detect_service
 from src.scanner import scan_ports
 
 
+MIN_PORT = 1
+MAX_PORT = 65535
+
+
+def _validate_port(port: int) -> None:
+    if port < MIN_PORT or port > MAX_PORT:
+        raise ValueError(f"Porta inválida: {port}. Use valores entre {MIN_PORT} e {MAX_PORT}.")
+
+
 def parse_ports(raw_ports: str) -> List[int]:
+    """Parse comma-separated ports and ranges into a sorted unique list."""
+
     ports: List[int] = []
     for chunk in raw_ports.split(","):
         chunk = chunk.strip()
@@ -17,10 +28,20 @@ def parse_ports(raw_ports: str) -> List[int]:
             continue
 
         if "-" in chunk:
-            start, end = chunk.split("-", maxsplit=1)
-            ports.extend(range(int(start), int(end) + 1))
+            start_raw, end_raw = chunk.split("-", maxsplit=1)
+            start, end = int(start_raw), int(end_raw)
+            if start > end:
+                raise ValueError(f"Intervalo inválido: {chunk}. Use início <= fim.")
+            for port in range(start, end + 1):
+                _validate_port(port)
+                ports.append(port)
         else:
-            ports.append(int(chunk))
+            port = int(chunk)
+            _validate_port(port)
+            ports.append(port)
+
+    if not ports:
+        raise ValueError("Nenhuma porta válida foi informada.")
 
     return sorted(set(ports))
 
@@ -49,7 +70,14 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    ports = parse_ports(args.ports)
+    if args.timeout <= 0:
+        parser.error("--timeout deve ser maior que zero.")
+
+    try:
+        ports = parse_ports(args.ports)
+    except ValueError as exc:
+        parser.error(str(exc))
+
     results = scan_ports(host=args.host, ports=ports, timeout=args.timeout)
 
     print(f"Escaneando {args.host}...")
